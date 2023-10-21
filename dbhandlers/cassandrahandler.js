@@ -16,7 +16,7 @@ const classifyIssue = async (cclient, repoId, repoDesc, repoName, repoUrl, tags,
       INSERT INTO reposight.issues (
         repo_id, issue_id, issue_title, difficulty, issue_url, status
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
     const params = [
         repoId, issueId, issueTitle, difficulty, issueUrl, issueStatus

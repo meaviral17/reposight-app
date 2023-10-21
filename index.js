@@ -3,18 +3,19 @@
  * @param {import('probot').Probot} app
  */
 
-const {issueOpenHandler, issueCommentHandler} = require('./webhook_handlers/issueOpenHandler');
+const { issueOpenHandler, issueCommentHandler } = require('./webhook_handlers/issueOpenHandler');
+const { pullRequestCloseHandler } = require("./webhook_handlers/pullrequesthandler");
 const redis = require('redis');
 const cassandra = require('cassandra-driver');
-module.exports = async(app) => {
+module.exports = async (app) => {
   const client = redis.createClient({
-    url: 'redis://127.0.0.1:9000'         
+    url: 'redis://127.0.0.1:9000'
   });
 
-  
+
   const cclient = new cassandra.Client({
-    contactPoints: ['localhost'], 
-    localDataCenter: 'datacenter1', 
+    contactPoints: ['localhost'],
+    localDataCenter: 'datacenter1',
   });
 
   await client.connect();
@@ -25,4 +26,9 @@ module.exports = async(app) => {
   app.on('issue_comment.created', async (context) => {
     await issueCommentHandler(context, client, cclient);
   });
+  app.on('pull_request.closed', async (context) => {
+    await pullRequestCloseHandler(cclient, context, client);
+  });
+
+  
 };
