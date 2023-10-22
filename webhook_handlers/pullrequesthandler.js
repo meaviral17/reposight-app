@@ -94,6 +94,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
                 return;
             }
             await cclient.execute(updateQueryFromRatingsForUserTextRating, [commentBody.toString(), repositoryId.toString(), creatorId.toString()], { prepare: true });
+            await deleteFromHashMap(client, pullRequestId);
             const commentText = `Thank you. Hope you have a good day.`;
             await context.octokit.issues.createComment({
                 owner: context.payload.repository.owner.login,
