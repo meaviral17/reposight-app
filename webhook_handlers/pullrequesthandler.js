@@ -1,4 +1,4 @@
-const { selectQueryFromIssues, updateQueryFromIssuesForStatus, insertQueryFromRatings, updateQueryFromReposForRepoRating, updateQueryFromRatingsForUserTextRating } = require("../constants/constants");
+const { selectQueryFromIssues, updateQueryFromIssuesForStatus, insertQueryFromRatings, updateQueryFromReposForRepoRating, updateQueryFromRatingsForUserTextRating, selectQueryFromReposForUpdatingRating } = require("../constants/constants");
 const { setToHashMap, returnFromHashMap, deleteFromHashMap } = require("../dbhandlers/redishandler");
 const pullRequestCloseHandler = async (cclient, context, client) => {
     if (context.payload.pull_request.merged) {
@@ -8,14 +8,14 @@ const pullRequestCloseHandler = async (cclient, context, client) => {
         const pullRequestId = context.payload.pull_request.id;
         const repositoryId = context.payload.repository.id;
         const { issueId, issueNumber } = await findAssociatedIssueId(context);
-        console.log(pullRequestTitle, issueId, issueNumber, " Details");
+        //console.log(pullRequestTitle, issueId, issueNumber, " Details");
         if (issueId) {
             const res = await cclient.execute(selectQueryFromIssues, [repositoryId.toString(), issueId.toString()], { prepare: true });
             if (res.rows.length > 0) {
                 try {
                     await cclient.execute(updateQueryFromIssuesForStatus, ["closed", repositoryId.toString(), issueId.toString()], { prepare: true });
 
-                    await setToHashMap(client, issueId.toString(), "rating", pullRequestCreatorId.toString());
+                    await setToHashMap(client, context.payload.issue.html_url.toString(), "rating", pullRequestCreatorId.toString());
                     const commentText = `Thank you for being a valuable part of Open Source. Please rate this. On Issue Classification from 1-5`;
                     await context.octokit.issues.createComment({
                         owner: context.payload.repository.owner.login,
@@ -35,14 +35,14 @@ const pullRequestCloseHandler = async (cclient, context, client) => {
 }
 
 const pullRequestCommentHandler = async (cclient, context, client) => {
-    const pullRequestId = context.payload.issue.id; // Pull Request ID
+    const pullRequestId = context.payload.issue.html_url; // Pull Request ID
     const creatorId = context.payload.sender.id; // Pull Request Creator ID
     const commentBody = context.payload.comment.body;
     const repositoryId = context.payload.repository.id;
     let numericValue = parseFloat(commentBody);
-    
+
     const data = await returnFromHashMap(client, pullRequestId.toString());
-    console.log(data,pullRequestId, creatorId, commentBody, repositoryId, " Details");
+    console.log(data, pullRequestId, creatorId, commentBody, repositoryId, " Details");
     if (data != null) {
         const dataPartition = data.split(" ");
         if (dataPartition[0] == "rating") {
@@ -57,7 +57,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             await context.octokit.issues.createComment({
                 owner: context.payload.repository.owner.login,
                 repo: context.payload.repository.name,
-                issue_number: context.payload.pull_request.number,
+                issue_number: context.payload.issue.number,
                 body: commentText,
             });
         }
@@ -73,11 +73,21 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             await context.octokit.issues.createComment({
                 owner: context.payload.repository.owner.login,
                 repo: context.payload.repository.name,
-                issue_number: context.payload.pull_request.number,
+                issue_number: context.payload.issue.number,
                 body: commentText,
             });
             await cclient.execute(insertQueryFromRatings, [repositoryId.toString(), creatorId.toString(), parseFloat(dataPartition[1]), numericValue, ""], { prepare: true });
-            await cclient.execute(updateQueryFromReposForRepoRating, [numericValue, parseFloat(dataPartition[1]), repositoryId.toString()], { prepare: true });
+            const selectRes = await cclient.execute(selectQueryFromReposForUpdatingRating, [repositoryId.toString()], { prepare: true });
+            const row = selectRes.first();
+
+            // Calculate the new values
+            const newSumCommunityRatings = row.sum_of_community_ratings + parseFloat(dataPartition[2]);
+            const newSumIssueClassificationRatings = row.sum_of_issue_classification_ratings + parseFloat(dataPartition[1]);
+            const newTotalCommunityRatings = row.total_community_ratings + 1;
+            const newTotalIssueClassificationRatings = row.total_issue_classification_ratings + 1;
+
+            const newAvgRatings = (newSumCommunityRatings + newSumIssueClassificationRatings) / (newTotalCommunityRatings + newTotalIssueClassificationRatings);
+            await cclient.execute(updateQueryFromReposForRepoRating, [newSumCommunityRatings, newSumIssueClassificationRatings, newTotalCommunityRatings, newTotalIssueClassificationRatings, newAvgRatings, repositoryId.toString()], { prepare: true });
         }
         else if (dataPartition[0] == "ratingText") {
             if (dataPartition[3] != creatorId.toString()) {
@@ -88,7 +98,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             await context.octokit.issues.createComment({
                 owner: context.payload.repository.owner.login,
                 repo: context.payload.repository.name,
-                issue_number: context.payload.pull_request.number,
+                issue_number: context.payload.issue.number,
                 body: commentText,
             });
         }

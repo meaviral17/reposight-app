@@ -21,6 +21,7 @@ const returnFromHashMap = async(client, key) => {
       return returnMessageWrapper(false, null, err);
     }
     else{
+      console.log(retrievedValue, "Yes");
       return returnMessageWrapper(true, retrievedValue, null);
     }
   })
