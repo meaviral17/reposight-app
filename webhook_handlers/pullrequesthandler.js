@@ -15,7 +15,7 @@ const pullRequestCloseHandler = async (cclient, context, client) => {
                 try {
                     await cclient.execute(updateQueryFromIssuesForStatus, ["closed", repositoryId.toString(), issueId.toString()], { prepare: true });
 
-                    await setToHashMap(client, context.payload.issue.html_url.toString(), "rating", pullRequestCreatorId.toString());
+                    await setToHashMap(client, context.payload.pull_request.html_url.toString(), "rating", pullRequestCreatorId.toString());
                     const commentText = `Thank you for being a valuable part of Open Source. Please rate this. On Issue Classification from 1-5`;
                     await context.octokit.issues.createComment({
                         owner: context.payload.repository.owner.login,
@@ -79,7 +79,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             await cclient.execute(insertQueryFromRatings, [repositoryId.toString(), creatorId.toString(), parseFloat(dataPartition[1]), numericValue, ""], { prepare: true });
             const selectRes = await cclient.execute(selectQueryFromReposForUpdatingRating, [repositoryId.toString()], { prepare: true });
             const row = selectRes.first();
-
+            
             // Calculate the new values
             const newSumCommunityRatings = row.sum_of_community_ratings + parseFloat(dataPartition[2]);
             const newSumIssueClassificationRatings = row.sum_of_issue_classification_ratings + parseFloat(dataPartition[1]);
