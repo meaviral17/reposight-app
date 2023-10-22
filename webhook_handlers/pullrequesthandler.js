@@ -1,4 +1,4 @@
-const { selectQueryFromIssues, updateQueryFromIssuesForStatus } = require("../constants/constants");
+const { selectQueryFromIssues, updateQueryFromIssuesForStatus, insertQueryFromRatings, updateQueryFromReposForRepoRating, updateQueryFromRatingsForUserTextRating } = require("../constants/constants");
 const { setToHashMap, returnFromHashMap, deleteFromHashMap } = require("../dbhandlers/redishandler");
 const pullRequestCloseHandler = async (cclient, context, client) => {
     if (context.payload.pull_request.merged) {
@@ -8,25 +8,88 @@ const pullRequestCloseHandler = async (cclient, context, client) => {
         const pullRequestId = context.payload.pull_request.id;
         const repositoryId = context.payload.repository.id;
         const { issueId, issueNumber } = await findAssociatedIssueId(context);
-        console.log(pullRequestTitle);
+        console.log(pullRequestTitle, issueId, issueNumber, " Details");
         if (issueId) {
-            cclient.execute(selectQueryFromIssues, [repositoryId, issueId], { prepare: true }, (selectError, selectResult) => {
-                if (selectResult.rows.length > 0) {
-                    cclient.execute(updateQueryFromIssuesForStatus, ["closed", repositoryId, issueId], { prepare: true }, async (updateError) => {
-                        if (!updateError) {
-                            await setToHashMap(client, pullRequestId, "rating", pullRequestCreatorId);
-                            const commentText = `Thank you for being a valuable part of Open Source. Please rate this. On Issue Classification from 1-5`;
-                            await context.octokit.issues.createComment({
-                                owner: context.payload.repository.owner.login,
-                                repo: context.payload.repository.name,
-                                issue_number: context.payload.pull_request.number,
-                                body: commentText,
-                            });
-                        } else {
-                            console.error('Error updating issue status in Cassandra:', updateError);
-                        }
+            const res = await cclient.execute(selectQueryFromIssues, [repositoryId.toString(), issueId.toString()], { prepare: true });
+            if (res.rows.length > 0) {
+                try {
+                    await cclient.execute(updateQueryFromIssuesForStatus, ["closed", repositoryId.toString(), issueId.toString()], { prepare: true });
+
+                    await setToHashMap(client, issueId.toString(), "rating", pullRequestCreatorId.toString());
+                    const commentText = `Thank you for being a valuable part of Open Source. Please rate this. On Issue Classification from 1-5`;
+                    await context.octokit.issues.createComment({
+                        owner: context.payload.repository.owner.login,
+                        repo: context.payload.repository.name,
+                        issue_number: context.payload.pull_request.number,
+                        body: commentText,
                     });
+
+
+                } catch (e) {
+                    console.error('Error updating issue status in Cassandra:', e);
                 }
+
+            }
+        }
+    }
+}
+
+const pullRequestCommentHandler = async (cclient, context, client) => {
+    const pullRequestId = context.payload.issue.id; // Pull Request ID
+    const creatorId = context.payload.sender.id; // Pull Request Creator ID
+    const commentBody = context.payload.comment.body;
+    const repositoryId = context.payload.repository.id;
+    let numericValue = parseFloat(commentBody);
+    
+    const data = await returnFromHashMap(client, pullRequestId.toString());
+    console.log(data,pullRequestId, creatorId, commentBody, repositoryId, " Details");
+    if (data != null) {
+        const dataPartition = data.split(" ");
+        if (dataPartition[0] == "rating") {
+            if (isNaN(numericValue) || numericValue > 5) {
+                return;
+            }
+            if (dataPartition[1] != creatorId.toString()) {
+                return;
+            }
+            await setToHashMap(client, pullRequestId.toString(), `ratingCommunity ${numericValue}`, creatorId.toString());
+            const commentText = `Thank you for being a valuable part of Open Source. Please rate this. On Community from 1-5`;
+            await context.octokit.issues.createComment({
+                owner: context.payload.repository.owner.login,
+                repo: context.payload.repository.name,
+                issue_number: context.payload.pull_request.number,
+                body: commentText,
+            });
+        }
+        else if (dataPartition[0] == "ratingCommunity") {
+            if (isNaN(numericValue) || numericValue > 5) {
+                return;
+            }
+            if (dataPartition[2] != creatorId.toString()) {
+                return;
+            }
+            await setToHashMap(client, pullRequestId.toString(), `ratingText ${dataPartition[1]} ${numericValue}`, creatorId.toString());
+            const commentText = `Thank you for being a valuable part of Open Source. Your rating has been market. Write any textual review.`;
+            await context.octokit.issues.createComment({
+                owner: context.payload.repository.owner.login,
+                repo: context.payload.repository.name,
+                issue_number: context.payload.pull_request.number,
+                body: commentText,
+            });
+            await cclient.execute(insertQueryFromRatings, [repositoryId.toString(), creatorId.toString(), parseFloat(dataPartition[1]), numericValue, ""], { prepare: true });
+            await cclient.execute(updateQueryFromReposForRepoRating, [numericValue, parseFloat(dataPartition[1]), repositoryId.toString()], { prepare: true });
+        }
+        else if (dataPartition[0] == "ratingText") {
+            if (dataPartition[3] != creatorId.toString()) {
+                return;
+            }
+            await cclient.execute(updateQueryFromRatingsForUserTextRating, [commentBody.toString(), repositoryId.toString(), creatorId.toString()], { prepare: true });
+            const commentText = `Thank you. Hope you have a good day.`;
+            await context.octokit.issues.createComment({
+                owner: context.payload.repository.owner.login,
+                repo: context.payload.repository.name,
+                issue_number: context.payload.pull_request.number,
+                body: commentText,
             });
         }
     }
@@ -50,4 +113,4 @@ async function findAssociatedIssueId(context) {
 }
 
 
-module.exports = { pullRequestCloseHandler };
+module.exports = { pullRequestCloseHandler, pullRequestCommentHandler };

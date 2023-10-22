@@ -4,7 +4,7 @@
  */
 
 const { issueOpenHandler, issueCommentHandler } = require('./webhook_handlers/issueOpenHandler');
-const { pullRequestCloseHandler } = require("./webhook_handlers/pullrequesthandler");
+const { pullRequestCloseHandler, pullRequestCommentHandler } = require("./webhook_handlers/pullrequesthandler");
 const redis = require('redis');
 const cassandra = require('cassandra-driver');
 module.exports = async (app) => {
@@ -24,11 +24,18 @@ module.exports = async (app) => {
     await issueOpenHandler(context, client);
   });
   app.on('issue_comment.created', async (context) => {
-    await issueCommentHandler(context, client, cclient);
+    const issueComment = context.payload.comment;
+    console.log(issueComment);
+    const pullRequestPattern = /https:\/\/github\.com\/.*\/pull\/\d+/;
+    if (pullRequestPattern.test(issueComment.html_url)) {
+      console.log("Pull Request Comment Detected");
+      await pullRequestCommentHandler(cclient, context, client);
+    } else {
+      console.log("Issue Comment Detected");
+      await issueCommentHandler(context, client, cclient);
+    }
   });
   app.on('pull_request.closed', async (context) => {
     await pullRequestCloseHandler(cclient, context, client);
   });
-
-  
 };
