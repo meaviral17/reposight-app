@@ -63,11 +63,19 @@ const getRepoInformation = async (context) => {
         owner: repoOwner,
         repo: repoName,
     });
+    const languages = await context.octokit.repos.listLanguages({
+        owner: repoOwner,
+        repo: repoName,
+      });
+      const repoLanguages = Object.keys(languages.data);
     let repoTags = [];
     if (topics && topics.data.names) {
         repoTags = topics.data.names.map((label) => label.name);
     }
-
+    if(repoLanguages.length > 0){
+        repoLanguages.forEach((lang) => repoTags.push(lang));
+    }
+    console.log(repoTags);
     return {
         repoName, repoDescription, repoUrl, repoId, repoTags
     };

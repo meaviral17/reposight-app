@@ -79,7 +79,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             await cclient.execute(insertQueryFromRatings, [repositoryId.toString(), creatorId.toString(), parseFloat(dataPartition[1]), numericValue, ""], { prepare: true });
             const selectRes = await cclient.execute(selectQueryFromReposForUpdatingRating, [repositoryId.toString()], { prepare: true });
             const row = selectRes.first();
-            
+            console.log(row);
             // Calculate the new values
             const newSumCommunityRatings = row.sum_of_community_ratings + parseFloat(dataPartition[2]);
             const newSumIssueClassificationRatings = row.sum_of_issue_classification_ratings + parseFloat(dataPartition[1]);
@@ -87,7 +87,8 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             const newTotalIssueClassificationRatings = row.total_issue_classification_ratings + 1;
 
             const newAvgRatings = (newSumCommunityRatings + newSumIssueClassificationRatings) / (newTotalCommunityRatings + newTotalIssueClassificationRatings);
-            await cclient.execute(updateQueryFromReposForRepoRating, [newSumCommunityRatings, newSumIssueClassificationRatings, newTotalCommunityRatings, newTotalIssueClassificationRatings, newAvgRatings, repositoryId.toString()], { prepare: true });
+            const resStuff = await cclient.execute(updateQueryFromReposForRepoRating, [newSumCommunityRatings, newSumIssueClassificationRatings, newTotalCommunityRatings, newTotalIssueClassificationRatings, newAvgRatings, repositoryId.toString()], { prepare: true });
+            console.log(resStuff);
         }
         else if (dataPartition[0] == "ratingText") {
             if (dataPartition[3] != creatorId.toString()) {
