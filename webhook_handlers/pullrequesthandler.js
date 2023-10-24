@@ -8,7 +8,7 @@ const pullRequestCloseHandler = async (cclient, context, client) => {
         const pullRequestId = context.payload.pull_request.id;
         const repositoryId = context.payload.repository.id;
         const { issueId, issueNumber } = await findAssociatedIssueId(context);
-        //console.log(pullRequestTitle, issueId, issueNumber, " Details");
+        
         if (issueId) {
             const res = await cclient.execute(selectQueryFromIssues, [repositoryId.toString(), issueId.toString()], { prepare: true });
             if (res.rows.length > 0) {
@@ -42,7 +42,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
     let numericValue = parseFloat(commentBody);
 
     const data = await returnFromHashMap(client, pullRequestId.toString());
-    console.log(data, pullRequestId, creatorId, commentBody, repositoryId, " Details");
+    
     if (data != null) {
         const dataPartition = data.split(" ");
         if (dataPartition[0] == "rating") {
@@ -79,7 +79,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
             await cclient.execute(insertQueryFromRatings, [repositoryId.toString(), creatorId.toString(), parseFloat(dataPartition[1]), numericValue, ""], { prepare: true });
             const selectRes = await cclient.execute(selectQueryFromReposForUpdatingRating, [repositoryId.toString()], { prepare: true });
             const row = selectRes.first();
-            console.log(row);
+           
             // Calculate the new values
             const newSumCommunityRatings = row.sum_of_community_ratings + parseFloat(dataPartition[2]);
             const newSumIssueClassificationRatings = row.sum_of_issue_classification_ratings + parseFloat(dataPartition[1]);
@@ -88,7 +88,7 @@ const pullRequestCommentHandler = async (cclient, context, client) => {
 
             const newAvgRatings = (newSumCommunityRatings + newSumIssueClassificationRatings) / (newTotalCommunityRatings + newTotalIssueClassificationRatings);
             const resStuff = await cclient.execute(updateQueryFromReposForRepoRating, [newSumCommunityRatings, newSumIssueClassificationRatings, newTotalCommunityRatings, newTotalIssueClassificationRatings, newAvgRatings, repositoryId.toString()], { prepare: true });
-            console.log(resStuff);
+            
         }
         else if (dataPartition[0] == "ratingText") {
             if (dataPartition[3] != creatorId.toString()) {

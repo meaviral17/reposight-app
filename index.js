@@ -25,13 +25,13 @@ module.exports = async (app) => {
   });
   app.on('issue_comment.created', async (context) => {
     const issueComment = context.payload;
-    console.log(issueComment);
+    
     const pullRequestPattern = /https:\/\/github\.com\/.*\/pull\/\d+/;
     if (pullRequestPattern.test(context.payload.comment.html_url)) {
-      console.log("Pull Request Comment Detected");
+      
       await pullRequestCommentHandler(cclient, context, client);
     } else {
-      console.log("Issue Comment Detected");
+      
       await issueCommentHandler(context, client, cclient);
     }
   });

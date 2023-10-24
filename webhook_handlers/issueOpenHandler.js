@@ -6,7 +6,7 @@ const issueOpenHandler = async (context, client) => {
     if (await checkIfWritePermissions(context)) {
         const issueComment = context.issue({ body: "How will you classify this issue? \n ❤️ Beginner \n 👀 Intermediate \n 🚀 Advanced" });
         const createComment = await context.octokit.issues.createComment(issueComment);
-        console.log(context.payload.issue.id.toString());
+        
         await setToHashMap(client, context.payload.issue.id.toString(), "issuecomment", "issueclassify");
     }
 }
@@ -75,7 +75,7 @@ const getRepoInformation = async (context) => {
     if(repoLanguages.length > 0){
         repoLanguages.forEach((lang) => repoTags.push(lang));
     }
-    console.log(repoTags);
+    
     return {
         repoName, repoDescription, repoUrl, repoId, repoTags
     };
