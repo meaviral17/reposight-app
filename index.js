@@ -9,7 +9,7 @@ const redis = require('redis');
 const cassandra = require('cassandra-driver');
 module.exports = async (app) => {
   const client = redis.createClient({
-    url: 'redis://127.0.0.1:9000'
+    url: 'redis://127.0.0.1:6379'
   });
 
 
