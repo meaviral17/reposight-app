@@ -1,39 +1,29 @@
-## Contributing
+# Contributing to Reposight App
 
-[fork]: /fork
-[pr]: /compare
-[code-of-conduct]: CODE_OF_CONDUCT.md
+Thank you for considering contributing to Reposight App! By participating in this project, you agree to abide by the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
-Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.
+## How Can I Contribute?
 
-Please note that this project is released with a [Contributor Code of Conduct][code-of-conduct]. By participating in this project you agree to abide by its terms.
+### Reporting Bugs
 
-## Issues and PRs
+Found a bug? Please help us fix it by following these steps:
+1. Check if the bug has already been reported by searching through the [Issues](https://github.com/reposight/repo/issues).
+2. If it hasn't been reported yet, open a new issue and provide detailed information about the bug, including steps to reproduce it.
 
-If you have suggestions for how this project could be improved, or want to report a bug, open an issue! We'd love all and any contributions. If you have questions, too, we'd love to hear them.
+### Suggesting Enhancements
 
-We'd also love PRs. If you're thinking of a large PR, we advise opening up an issue first to talk about it, though! Look at the links below if you're not sure how to open a PR.
+Have an idea to improve Reposight App? We'd love to hear it! Follow these steps:
+1. Search through the [Issues](https://github.com/reposight/repo/issues) to see if your enhancement idea has been suggested before.
+2. If not, open a new issue and describe your enhancement idea thoroughly.
 
-## Submitting a pull request
+### Contributing Code
 
-1. [Fork][fork] and clone the repository.
-1. Configure and install the dependencies: `npm install`.
-1. Make sure the tests pass on your machine: `npm test`, note: these tests also apply the linter, so there's no need to lint separately.
-1. Create a new branch: `git checkout -b my-branch-name`.
-1. Make your change, add tests, and make sure the tests still pass.
-1. Push to your fork and [submit a pull request][pr].
-1. Pat your self on the back and wait for your pull request to be reviewed and merged.
+Want to contribute code to Reposight App? Great! Follow these steps:
+1. Fork the repository and create a new branch for your contribution.
+2. Make your changes and ensure that they adhere to the coding standards and conventions.
+3. Test your changes thoroughly.
+4. Submit a pull request, clearly describing your changes and their purpose.
 
-Here are a few things you can do that will increase the likelihood of your pull request being accepted:
+## Code of Conduct
 
-- Write and update tests.
-- Keep your changes as focused as possible. If there are multiple changes you would like to make that are not dependent upon each other, consider submitting them as separate pull requests.
-- Write a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
-
-Work in Progress pull requests are also welcome to get feedback early on, or if there is something blocked you.
-
-## Resources
-
-- [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
-- [Using Pull Requests](https://help.github.com/articles/about-pull-requests/)
-- [GitHub Help](https://help.github.com)
+Please review our [Code of Conduct](./CODE_OF_CONDUCT.md) to understand the behavior we expect from contributors.
