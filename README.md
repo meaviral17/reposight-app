@@ -1,33 +1,46 @@
-# reposight-app
+# Reposight App
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that A Probot app
+## **Introduction**
 
-## Setup
+Reposight App is a GitHub App powered by Probot, designed to simplify the process of finding open-source projects to contribute to. With Reposight, discover projects aligned with your interests and skills effortlessly, thanks to its efficient search functionality and customizable filters.
 
-```sh
-# Install dependencies
+## **Setup**
+
+To set up the Reposight App, follow these steps:
+
+### Install dependencies
+
+```bash
 npm install
+```
 
-# Run the bot
+### Run the bot
+
+```bash
 npm start
 ```
 
-## Docker
+## **Docker**
 
-```sh
-# 1. Build container
+If you prefer running the app in a Docker container, follow these steps:
+
+### 1. Build container
+
+```bash
 docker build -t reposight-app .
+```
 
-# 2. Start container
+### 2. Start container
+
+```bash
 docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> reposight-app
 ```
 
-## Contributing
+## **Contributing**
 
-If you have suggestions for how reposight-app could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
+We welcome contributions to improve the Reposight App! If you have suggestions for enhancements or want to report a bug, feel free to open an issue. Check out our [Contributing Guide](#) for more details.
 
-For more, check out the [Contributing Guide](CONTRIBUTING.md).
+We appreciate all contributions, big or small! 
 
-## License
-
-[ISC](LICENSE) © 2023 agrkushal
+---
+With Reposight App, streamline your open-source contributions effortlessly!
